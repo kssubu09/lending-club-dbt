@@ -81,11 +81,56 @@ grep -v "PUBLIC KEY" /c/Keys/lending_club/rsa_key.pub | tr -d '\n'; echo
 3. Run all statements.
 4. Check: `DESC USER DBT_SVC;` shows an `RSA_PUBLIC_KEY_FP` value starting with `SHA256:`.
 
-This creates the `LC_WH` warehouse (X-Small, auto-suspend 60 s), the `LENDING_CLUB` database with a `RAW` schema, the `LC_TRANSFORMER` role, and the `DBT_SVC` service user that signs in with the key pair.
+This creates the LC_WH warehouse (X-Small, auto-suspend 60 s), the LENDING_CLUB database with a RAW schema, the LC_TRANSFORMER role with the DBT_SVC user for dbt, and the LC_LOADER role with the LOADER_SVC user for loading. Both service users sign in with the key pair.
 
-## Next sections (added as the project progresses)
+## 7. Load the raw data into Snowflake
 
-- 7. Load the raw data into Snowflake
-- 8. Configure the dbt profile
-- 9. Build and test the dbt project
-- 10. Run CI on GitHub Actions
+Loading uses a separate service user, `LOADER_SVC` with the `LC_LOADER` role, so dbt's `LC_TRANSFORMER` role can only read raw data.
+
+1. Run the file format, stage and table section of `setup\02_raw_load.sql` as SYSADMIN.
+2. Run the loader role and user section of `setup\01_snowflake_setup.sql`, replacing `<PASTE_PUBLIC_KEY>` with the one-line public key from section 5.
+3. Install the Snowflake CLI:
+
+   ```powershell
+   uv tool install snowflake-cli
+   snow --version
+   ```
+
+4. Create `%USERPROFILE%\.snowflake\config.toml` with this connection:
+
+   ```toml
+   [connections.lc_loader]
+   account = "<YOUR_ACCOUNT_IDENTIFIER>"
+   user = "LOADER_SVC"
+   authenticator = "SNOWFLAKE_JWT"
+   private_key_file = "C:\\Keys\\lending_club\\rsa_key.p8"
+   role = "LC_LOADER"
+   warehouse = "LC_WH"
+   database = "LENDING_CLUB"
+   schema = "RAW"
+   ```
+
+5. Set the key passphrase for the session and test the connection:
+
+   ```powershell
+   $env:PRIVATE_KEY_PASSPHRASE = "<your passphrase>"
+   snow connection test -c lc_loader
+   ```
+
+6. Hold back the 2017 and 2018 files for the incremental demo:
+
+   ```powershell
+   mkdir data\later
+   Move-Item data\out\loans_2017.csv, data\out\loans_2018.csv data\later\
+   ```
+
+7. Upload the 2007–2016 files to the internal stage with PUT (files are gzip-compressed on upload):
+
+   ```powershell
+   snow sql -c lc_loader -q "PUT 'file://C:/Projects/lending-club-dbt/data/out/*.csv' @LC_STAGE/loans/ AUTO_COMPRESS=TRUE"
+   ```
+
+8. Run the `COPY INTO` section of `setup\02_raw_load.sql`.
+9. Check: one row count per file, and zero rows where `TRY_TO_NUMBER(id)` is null.
+
+Rerunning `COPY INTO` is safe: Snowflake skips files it has already loaded.
