@@ -134,3 +134,31 @@ Loading uses a separate service user, `LOADER_SVC` with the `LC_LOADER` role, so
 9. Check: one row count per file, and zero rows where `TRY_TO_NUMBER(id)` is null.
 
 Rerunning `COPY INTO` is safe: Snowflake skips files it has already loaded.
+
+
+
+## 8. Configure the dbt profile
+
+1. Set the key passphrase once and restart VS Code: `setx PRIVATE_KEY_PASSPHRASE "<your passphrase>"`.
+2. Create `lending_club\profiles.yml` (git-ignored):
+
+   ```yaml
+   lending_club:
+     target: dev
+     outputs:
+       dev:
+         type: snowflake
+         account: <YOUR_ACCOUNT_IDENTIFIER>
+         user: DBT_SVC
+         private_key_path: 'C:\Keys\lending_club\rsa_key.p8'
+         private_key_passphrase: "{{ env_var('PRIVATE_KEY_PASSPHRASE') }}"
+         role: LC_TRANSFORMER
+         warehouse: LC_WH
+         database: LENDING_CLUB
+         schema: DBT_DEV
+         threads: 4
+   ```
+
+3. From the `lending_club` folder, run `dbt deps` then `dbt debug`. All checks should pass.
+
+Always run dbt commands from inside the `lending_club` folder.
