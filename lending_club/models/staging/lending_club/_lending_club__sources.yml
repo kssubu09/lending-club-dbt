@@ -1,0 +1,17 @@
+sources:
+  - name: lending_club
+    database: LENDING_CLUB
+    schema: RAW
+    tables:
+      - name: loans
+        description: Lending Club accepted loans, all columns as text, one row per loan.
+        config:
+          loaded_at_field: _loaded_at
+          freshness:
+            warn_after: {count: 30, period: day}
+        columns:
+          - name: id
+            description: Lending Club loan ID.
+            data_tests:
+              - not_null
+              - unique
