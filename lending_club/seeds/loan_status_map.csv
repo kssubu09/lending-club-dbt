@@ -1,0 +1,10 @@
+loan_status,status_group,is_closed,is_bad
+Fully Paid,Fully Paid,true,false
+Charged Off,Defaulted,true,true
+Default,Defaulted,true,true
+Current,Current,false,false
+In Grace Period,Delinquent,false,false
+Late (16-30 days),Delinquent,false,false
+Late (31-120 days),Delinquent,false,true
+Does not meet the credit policy. Status:Fully Paid,Fully Paid,true,false
+Does not meet the credit policy. Status:Charged Off,Defaulted,true,true

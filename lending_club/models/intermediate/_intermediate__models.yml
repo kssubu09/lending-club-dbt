@@ -1,0 +1,17 @@
+models:
+  - name: int_loans__enriched
+    description: Staging loans plus status groups, FICO midpoint and net loss.
+    columns:
+      - name: loan_id
+        data_tests: [unique, not_null]
+      - name: status_group
+        description: Null means a raw status is missing from the loan_status_map seed.
+        data_tests:
+          - not_null:
+              name: int_loans_every_status_is_mapped
+      - name: net_loss_amount
+        data_tests:
+          - dbt_utils.accepted_range:
+              name: int_loans_net_loss_not_negative
+              arguments:
+                min_value: 0
