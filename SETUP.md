@@ -162,3 +162,20 @@ Rerunning `COPY INTO` is safe: Snowflake skips files it has already loaded.
 3. From the `lending_club` folder, run `dbt deps` then `dbt debug`. All checks should pass.
 
 Always run dbt commands from inside the `lending_club` folder.
+
+
+## 9. Build and test the dbt project
+
+Run from the `lending_club` folder, with the virtual environment active:
+
+```powershell
+dbt deps
+dbt source freshness
+dbt build
+```
+
+- `dbt deps` installs packages from `packages.yml` (dbt_utils).
+- `dbt source freshness` checks that the raw data was loaded recently (warns after 30 days).
+- `dbt build` creates all models, then runs every test, in dependency order.
+
+Models are created in schemas named after your target schema, for example `DBT_DEV_STAGING`.
