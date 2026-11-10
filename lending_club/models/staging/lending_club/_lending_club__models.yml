@@ -1,0 +1,19 @@
+models:
+  - name: stg_lending_club__loans
+    description: One row per Lending Club loan, typed and renamed. No business logic.
+    columns:
+      - name: loan_id
+        data_tests: [unique, not_null]
+      - name: term_months
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [36, 60]
+                quote: false
+      - name: grade
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+      - name: issue_month
+        data_tests: [not_null]
