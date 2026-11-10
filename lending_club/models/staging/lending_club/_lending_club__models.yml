@@ -7,12 +7,14 @@ models:
       - name: term_months
         data_tests:
           - accepted_values:
+              name: stg_loans_term_is_36_or_60
               arguments:
                 values: [36, 60]
                 quote: false
       - name: grade
         data_tests:
           - accepted_values:
+              name: stg_loans_grade_is_a_to_g
               arguments:
                 values: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
       - name: issue_month
