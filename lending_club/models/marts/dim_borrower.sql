@@ -1,0 +1,20 @@
+select
+    loan_id as borrower_key,
+    employer_title,
+    employment_years,
+    home_ownership,
+    annual_income,
+    verification_status,
+    state_code,
+    zip3_masked,
+    debt_to_income_ratio,
+    earliest_credit_line_month,
+    fico_low,
+    fico_high,
+    fico_mid,
+    open_accounts,
+    public_records,
+    revolving_balance,
+    revolving_utilisation,
+    total_accounts
+from {{ ref('int_loans__enriched') }}
