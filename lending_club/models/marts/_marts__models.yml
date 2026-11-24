@@ -1,0 +1,65 @@
+models:
+  - name: fct_loans
+    description: One row per loan with amounts, rates, status and losses.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          name: fct_loans_funded_not_above_requested
+          arguments:
+            expression: "funded_amount <= loan_amount"
+    columns:
+      - name: loan_id
+        data_tests: [unique, not_null]
+      - name: sub_grade
+        data_tests:
+          - relationships:
+              name: fct_loans_sub_grade_in_dim_grade
+              arguments:
+                to: ref('dim_grade')
+                field: sub_grade
+      - name: issue_month
+        data_tests:
+          - relationships:
+              name: fct_loans_issue_month_in_dim_month
+              arguments:
+                to: ref('dim_month')
+                field: month_start
+      - name: borrower_key
+        data_tests:
+          - relationships:
+              name: fct_loans_borrower_in_dim_borrower
+              arguments:
+                to: ref('dim_borrower')
+                field: borrower_key
+      - name: interest_rate
+        data_tests:
+          - dbt_utils.accepted_range:
+              name: fct_loans_interest_rate_0_to_40_pct
+              arguments:
+                min_value: 0
+                max_value: 0.4
+
+  - name: dim_grade
+    description: Lending Club sub-grades A1 to G5.
+    columns:
+      - name: sub_grade
+        data_tests: [unique, not_null]
+
+  - name: dim_month
+    description: One row per calendar month, 2007 to 2018.
+    columns:
+      - name: month_start
+        data_tests: [unique, not_null]
+
+  - name: dim_borrower
+    description: Borrower attributes. One row per loan, because the data has no borrower ID.
+    columns:
+      - name: borrower_key
+        data_tests: [unique, not_null]
+
+  - name: mart_vintage_performance
+    description: Default and loss rates by issue quarter and grade.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: mart_vintage_one_row_per_vintage_grade
+          arguments:
+            combination_of_columns: [vintage, grade]
