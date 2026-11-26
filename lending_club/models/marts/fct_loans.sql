@@ -1,3 +1,10 @@
+{{ config(
+    materialized = 'incremental',
+    unique_key = 'loan_id',
+    incremental_strategy = 'merge',
+    on_schema_change = 'append_new_columns'
+) }}
+
 select
     loan_id,
     loan_id            as borrower_key,
@@ -23,3 +30,7 @@ select
     last_payment_month,
     loaded_at
 from {{ ref('int_loans__enriched') }}
+
+{% if is_incremental() %}
+where loaded_at > (select max(loaded_at) from {{ this }})
+{% endif %}

@@ -1,0 +1,9 @@
+snapshots:
+  - name: snap_loan_status
+    description: History of each loan's status and outstanding principal (SCD type 2).
+    relation: ref('stg_lending_club__loans')
+    config:
+      schema: snapshots
+      unique_key: loan_id
+      strategy: check
+      check_cols: [loan_status, outstanding_principal]
