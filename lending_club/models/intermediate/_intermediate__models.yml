@@ -15,3 +15,21 @@ models:
               name: int_loans_net_loss_not_negative
               arguments:
                 min_value: 0
+                
+unit_tests:
+  - name: net_loss_only_for_defaulted_loans
+    description: Net loss = funded - principal paid - recoveries, and only for defaulted loans.
+    model: int_loans__enriched
+    given:
+      - input: ref('stg_lending_club__loans')
+        rows:
+          - {loan_id: 1, loan_status: 'Charged Off', funded_amount: 10000, principal_paid: 4000, recoveries: 1000, fico_low: 700, fico_high: 704}
+          - {loan_id: 2, loan_status: 'Fully Paid', funded_amount: 5000, principal_paid: 5000, recoveries: 0, fico_low: 680, fico_high: 684}
+      - input: ref('loan_status_map')
+        rows:
+          - {loan_status: 'Charged Off', status_group: 'Defaulted', is_closed: true, is_bad: true}
+          - {loan_status: 'Fully Paid', status_group: 'Fully Paid', is_closed: true, is_bad: false}
+    expect:
+      rows:
+        - {loan_id: 1, net_loss_amount: 5000, fico_mid: 702}
+        - {loan_id: 2, net_loss_amount: 0, fico_mid: 682}
